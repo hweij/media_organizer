@@ -3,8 +3,8 @@ import * as path from 'path';
 
 const cwd = process.cwd();
 
-type FileType = 'jpg' | 'png' | 'gif' | 'other';
-type FileInfo = { name: string, type: FileType, size: number, group: string };
+type FileType = 'jpg' | 'png' | 'gif' | 'other' | '';
+type MediaInfo = { name: string, type: FileType, size: number, group: string, tags: string[] };
 
 const typeMap: { [id: string]: FileType } = {
     'jpg': 'jpg',
@@ -22,7 +22,7 @@ function getFileType(fname: string) {
 
 // list all files in the directory
 async function readFromDirectory(imagePath: string) {
-    const res: FileInfo[] = [];
+    const res: MediaInfo[] = [];
     const files = await fs.promises.readdir(imagePath);
     for (const file of files) {
         const fullPath = path.join(imagePath,file);
@@ -31,7 +31,7 @@ async function readFromDirectory(imagePath: string) {
         const imgType = (getFileType(file) || 'other');
         console.log(`file: ${fullPath} - ${isDir ? 'DIR' : stat.size + ' ' + imgType}`);
         if (!isDir) {
-            res.push({ name: file, size: stat.size, type: imgType, group: '' });
+            res.push({ name: file, size: stat.size, type: imgType, group: '', tags: [] });
         }
     };
     return res;
@@ -40,16 +40,64 @@ async function readFromDirectory(imagePath: string) {
 async function readFromMediaFile(imagePath: string) {
     const txt = await fs.promises.readFile(path.join(imagePath, 'media.json'), { encoding: 'utf8' });
     const jso = JSON.parse(txt);
-    const res: FileInfo[] = [];
+    const res: MediaInfo[] = [];
     for (let f of jso.files) {
-        res.push({ name: f.name, type: f.type, size: f.size, group: f.group });
+        res.push({ name: f.name, type: f.type, size: f.size, group: f.group, tags: f.tags });
     }
     return res;
 }
 
-function getMediaInfo(mediaData: FileInfo[], fname: string) {
+function getMediaInfo(mediaData: MediaInfo[], fname: string) {
     const entry = mediaData.find(md => md.name === fname);
     return entry;
+}
+
+function tagMatchAll(reqTags: string[], tags: string[]) {
+    if (tags) {
+        for (let t of reqTags) {
+            if (tags.indexOf(t) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+function filter(mediaInfo: MediaInfo[], filter: MediaInfo) {
+    const res: MediaInfo[] = [];
+
+    for (let e of mediaInfo) {
+        const match =
+            (!filter.name || (filter.name === e.name)) &&
+            (!filter.size || (filter.size === e.size)) &&
+            (!filter.group || (filter.group === e.group)) &&
+            (!filter.tags.length || tagMatchAll(filter.tags, e.tags)) 
+        if (match) {
+            res.push(e);
+        }
+    }
+    return res;
+}
+
+function findDuplicates(imageDir: string, mediaData: MediaInfo[]) {
+    // For now: just compare size. If that matches, check file content
+    const dupes: MediaInfo[] = [];
+    for (let i=0; i<mediaData.length - 1; i++) {
+        for (let j=i+1; j< mediaData.length; j++) {
+            const m1 = mediaData[i];
+            const m2 = mediaData[j];
+            if (m1.size === m2.size) {
+                // Same size, see if the content also matches
+                var buf1 = fs.readFileSync(path.join(imageDir, m1.name));
+                var buf2 = fs.readFileSync(path.join(imageDir, m2.name));
+                if (buf1.equals(buf2)) {
+                    dupes.push(m1, m2);
+                }
+            }
+        }
+    }
+    return dupes;
 }
 
 async function test() {
@@ -69,6 +117,18 @@ async function test() {
     const info = getMediaInfo(mediaData, '55085f7ef3223c2ab8d2aed73abf764b.jpeg');
     console.log('INFO');
     console.log(info);
+
+    // TEST: filter
+//  const filtered = filter(actualData, { name: '', size: 150020, group: '', type: '' })
+//  const filtered = filter(mediaData, { name: '', size: 0, group: '2girls001', type: '', tags: [] })
+    const filtered = filter(mediaData, { name: '', size: 0, group: '', type: '', tags: ['3d', 'drawing'] })
+    console.log('FILTER (' + filtered.length + ')');
+    console.log(filtered);
+
+    // Test: duplicates
+    const dupes = findDuplicates(imagePath, mediaData);
+    console.log('DUPES x 2 (' + dupes.length + ')');
+    console.log(dupes);
 }
 
 test();
