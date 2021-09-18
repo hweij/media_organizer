@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "CommonJS",
+    "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,
     "lib": ["es2017", "dom"],
@@ -10,7 +10,6 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "outDir": "js",
     "sourceMap": true,
     "inlineSources": true,
     "rootDir": "./",

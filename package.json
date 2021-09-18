@@ -4,8 +4,10 @@
   "description": "Media organizer",
   "main": "index.js",
   "scripts": {
+    "server:watch": "tsc --watch -p server",
+    "client:watch": "tsc --watch -p client",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron js/index.js"
+    "start": "electron server/index.js"
   },
   "author": "bigcamp",
   "license": "ISC",
