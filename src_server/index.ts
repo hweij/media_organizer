@@ -11,7 +11,7 @@ function createWindow () {
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('../client/index.html')
+  mainWindow.loadFile('../build/index.html')
 }
 
 app.whenReady().then(() => {

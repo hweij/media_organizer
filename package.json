@@ -4,15 +4,20 @@
   "description": "Media organizer",
   "main": "index.js",
   "scripts": {
-    "server:watch": "tsc --watch -p server",
-    "client:watch": "tsc --watch -p client",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron server/index.js"
+    "start": "snowpack dev",
+    "build": "snowpack build",
+    "server:build": "tsc -p src_server",
+    "server:watch": "tsc --watch -p src_server",
+    "electron:run": "electron src_server/index.js"
   },
   "author": "bigcamp",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^16.9.2",
-    "electron": "^14.0.1"
+    "electron": "^14.0.1",
+    "snowpack": "^3.8.8"
+  },
+  "dependencies": {
+    "lit": "^2.0.0-rc.4"
   }
 }
